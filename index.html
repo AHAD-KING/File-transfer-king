@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#17132b">
+<title>File Transfer 2.0</title>
+<style>
+:root{--bg:#100e1b;--panel:#1b1830;--panel2:#25203d;--ink:#f7f5ff;--muted:#b8b2d2;--accent:#a78bfa;--accent2:#7c3aed;--line:#3b3458;--good:#86efac;--bad:#fca5a5}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#29204b 0,#100e1b 55%);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+main{max-width:760px;margin:auto;padding:22px 15px 48px}.brand{display:flex;align-items:center;gap:13px;margin:10px 0 22px}.logo{width:55px;height:55px;border-radius:17px;background:linear-gradient(135deg,#a78bfa,#6d28d9);display:grid;place-items:center;font-size:27px;box-shadow:0 8px 28px #0005}.brand h1{font-size:clamp(23px,5vw,32px);line-height:1.1;margin:0}.brand p{margin:5px 0 0;color:var(--muted);font-size:14px}.pill{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:3px 9px;color:#ddd6fe;font-size:12px;margin-top:8px}
+.card{background:#1b1830ee;border:1px solid var(--line);border-radius:20px;padding:17px;margin:13px 0;box-shadow:0 12px 35px #0002}.card h2{font-size:19px;margin:0 0 5px}.muted{color:var(--muted);font-size:14px}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:16px 0}.tab,button{border:0;border-radius:13px;padding:12px 14px;font:inherit;font-weight:700;cursor:pointer}.tab{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}.tab.active,button.primary{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white}.tab.active{border-color:#c4b5fd}.secondary{background:#30294b;color:var(--ink);border:1px solid var(--line)}button:disabled{opacity:.45;cursor:not-allowed}.panel[hidden]{display:none}label{display:block;font-weight:650;margin:14px 0 6px}textarea,input[type=file]{width:100%;font:inherit;color:var(--ink);background:#100e1b;border:1px solid var(--line);border-radius:12px;padding:11px}textarea{min-height:118px;resize:vertical;font-size:12px;overflow-wrap:anywhere}input[type=file]{padding:14px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}.actions button{flex:1;min-width:130px}.status{border-radius:12px;background:#100e1b;border:1px solid var(--line);padding:12px;margin-top:12px;font-size:14px;overflow-wrap:anywhere}.status.good{color:var(--good)}.status.bad{color:var(--bad)}.filelist{font-size:13px;color:var(--muted);margin-top:8px;overflow-wrap:anywhere}.progress{height:8px;border-radius:99px;background:#0d0b16;overflow:hidden;margin-top:10px}.bar{height:100%;width:0;background:linear-gradient(90deg,#a78bfa,#86efac);transition:width .15s}.downloads a{display:block;color:#c4b5fd;padding:8px 0;overflow-wrap:anywhere}.note{font-size:13px;color:var(--muted);margin:12px 2px}.step{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:9px;background:#30294b;color:#ddd6fe;margin-right:7px;font-weight:800}footer{text-align:center;color:#8d86aa;font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<main>
+  <header class="brand">
+    <div class="logo" aria-hidden="true">⇄</div>
+    <div><h1>File Transfer 2.0</h1><p>Share files directly between browsers</p><span class="pill">Free • No account needed</span></div>
+  </header>
+  <div class="card">
+    <h2>Connect two phones</h2>
+    <p class="muted">This starter version sends files directly using WebRTC. To connect without a server, you must manually copy the connection text between the two phones. Both phones need this page open over HTTPS, and a network connection may be needed to establish the link.</p>
+    <div class="tabs"><button class="tab active" id="sendTab">↑ Send</button><button class="tab" id="receiveTab">↓ Receive</button></div>
+    <section class="panel" id="sendPanel">
+      <h2><span class="step">1</span>Choose files</h2>
+      <p class="muted">Choose one or more photos, videos, music files, or documents.</p>
+      <label for="files">Files to send</label><input id="files" type="file" multiple>
+      <div id="fileList" class="filelist">No files selected.</div>
+      <div class="actions"><button class="primary" id="makeOffer">Create connection text</button></div>
+      <label for="offerOut">Your offer — copy this to the receiving phone</label>
+      <textarea id="offerOut" readonly placeholder="Tap “Create connection text” first"></textarea>
+      <div class="actions"><button class="secondary" id="copyOffer">Copy offer</button></div>
+      <label for="answerIn">Paste the answer from the receiving phone</label>
+      <textarea id="answerIn" placeholder="Paste the receiver's answer here"></textarea>
+      <div class="actions"><button class="primary" id="connectSender">Connect and send</button></div>
+    </section>
+    <section class="panel" id="receivePanel" hidden>
+      <h2><span class="step">1</span>Receive files</h2>
+      <p class="muted">Ask the sender to create an offer, then paste it below.</p>
+      <label for="offerIn">Paste sender's offer</label>
+      <textarea id="offerIn" placeholder="Paste the sender's offer here"></textarea>
+      <div class="actions"><button class="primary" id="makeAnswer">Create answer</button></div>
+      <label for="answerOut">Your answer — copy this back to the sender</label>
+      <textarea id="answerOut" readonly placeholder="Your answer will appear here"></textarea>
+      <div class="actions"><button class="secondary" id="copyAnswer">Copy answer</button></div>
+      <div class="note">Keep this page open while the sender connects. Received files will appear below.</div>
+      <div class="downloads" id="downloads"></div>
+    </section>
+    <div id="status" class="status" role="status">Ready. Choose Send on one phone and Receive on the other.</div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+  </div>
+  <div class="card">
+    <h2>How to use it</h2>
+    <p><span class="step">1</span>Open this same website on both phones.</p>
+    <p><span class="step">2</span>On phone A, choose <b>Send</b>, select files, and create the offer.</p>
+    <p><span class="step">3</span>Copy the offer to phone B. Choose <b>Receive</b>, paste it, and create the answer.</p>
+    <p><span class="step">4</span>Copy the answer back to phone A and tap <b>Connect and send</b>.</p>
+    <p class="note">Tip: manual connection text can be long, so use a trusted messaging app or copy/paste method. Never share private files with people you don't trust. Large transfers may be limited by browser memory and connection quality.</p>
+  </div>
+  <footer>File Transfer 2.0 • Unofficial independent project</footer>
+</main>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+let pc = null, channel = null, receiving = null, selectedFiles = [];
+const status = (msg, cls='') => { $('status').textContent = msg; $('status').className = 'status ' + cls; };
+const progress = n => $('bar').style.width = Math.max(0,Math.min(100,n))+'%';
+const setMode = mode => {
+  const send = mode === 'send';
+  $('sendPanel').hidden = !send; $('receivePanel').hidden = send;
+  $('sendTab').classList.toggle('active',send); $('receiveTab').classList.toggle('active',!send);
+};
+$('sendTab').onclick = () => setMode('send');
+$('receiveTab').onclick = () => setMode('receive');
+$('files').addEventListener('change', e => {
+  selectedFiles = Array.from(e.target.files || []);
+  $('fileList').textContent = selectedFiles.length ? selectedFiles.map(f => `${f.name} (${formatSize(f.size)})`).join(' • ') : 'No files selected.';
+});
+function formatSize(n){ if(n < 1024) return n+' B'; const u=['KB','MB','GB']; let i=-1; do{n/=1024;i++;}while(n>=1024&&i<u.length-1); return n.toFixed(1)+' '+u[i]; }
+function makePC(){
+  if(pc){try{pc.close()}catch(e){}}
+  pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  pc.onconnectionstatechange = () => {
+    if(pc) status('Connection: '+pc.connectionState, pc.connectionState==='connected'?'good':'');
+  };
+  pc.oniceconnectionstatechange = () => {
+    if(pc && ['failed','disconnected'].includes(pc.iceConnectionState)) status('Connection failed or disconnected. Try again on both phones.', 'bad');
+  };
+  return pc;
+}
+function waitIce(peer){
+  return new Promise(resolve => {
+    if(peer.iceGatheringState === 'complete') return resolve();
+    const done = () => { if(peer.iceGatheringState === 'complete'){peer.removeEventListener('icegatheringstatechange',done);resolve();} };
+    peer.addEventListener('icegatheringstatechange',done);
+    setTimeout(()=>{peer.removeEventListener('icegatheringstatechange',done);resolve();},12000);
+  });
+}
+function parseDescription(text, type){
+  const obj = JSON.parse(text.trim());
+  if(!obj || obj.type !== type || !obj.sdp) throw new Error('That connection text does not look like a valid '+type+'. Copy the full text and try again.');
+  return obj;
+}
+async function copyText(id){
+  const el = $(id);
+  if(!el.value) return status('Nothing to copy yet.', 'bad');
+  el.focus(); el.select();
+  try { await navigator.clipboard.writeText(el.value); status('Copied. Switch to the other phone and paste it.', 'good'); }
+  catch(e){ status('Text selected. Long-press the selected text and choose Copy.', ''); }
+}
+$('copyOffer').onclick = () => copyText('offerOut');
+$('copyAnswer').onclick = () => copyText('answerOut');
+
+$('makeOffer').onclick = async () => {
+  try{
+    if(!selectedFiles.length) return status('Choose at least one file first.', 'bad');
+    if(!window.RTCPeerConnection) return status('This browser does not support WebRTC.', 'bad');
+    $('makeOffer').disabled = true; status('Creating connection text…');
+    const peer = makePC();
+    channel = peer.createDataChannel('file-transfer', {ordered:true});
+    channel.binaryType = 'arraybuffer';
+    channel.onopen = () => status('Connected! Sending files…', 'good');
+    channel.onclose = () => status('Transfer connection closed.');
+    channel.onerror = () => status('Transfer connection error.', 'bad');
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+    await waitIce(peer);
+    $('offerOut').value = JSON.stringify(peer.localDescription);
+    status('Offer created. Copy it to the receiving phone.', 'good');
+  }catch(e){status(e.message || 'Could not create offer.', 'bad');}
+  finally{$('makeOffer').disabled = false;}
+};
+
+$('makeAnswer').onclick = async () => {
+  try{
+    $('makeAnswer').disabled = true; status('Preparing receiver…');
+    const offer = parseDescription($('offerIn').value, 'offer');
+    const peer = makePC();
+    peer.ondatachannel = e => {
+      channel = e.channel; channel.binaryType = 'arraybuffer';
+      channel.onopen = () => status('Connected. Waiting for files…', 'good');
+      channel.onmessage = receiveMessage;
+      channel.onerror = () => status('Transfer connection error.', 'bad');
+    };
+    await peer.setRemoteDescription(offer);
+    const answer = await peer.createAnswer();
+    await peer.setLocalDescription(answer);
+    await waitIce(peer);
+    $('answerOut').value = JSON.stringify(peer.localDescription);
+    status('Answer created. Copy it back to the sender phone.', 'good');
+  }catch(e){status(e.message || 'Could not create answer. Check the pasted offer.', 'bad');}
+  finally{$('makeAnswer').disabled = false;}
+};
+
+$('connectSender').onclick = async () => {
+  try{
+    if(!pc) return status('First create an offer on the Send tab.', 'bad');
+    const answer = parseDescription($('answerIn').value, 'answer');
+    await pc.setRemoteDescription(answer);
+    status('Answer accepted. Connecting phones…');
+    channel.onopen = async () => {
+      status('Connected! Sending files…', 'good');
+      try{ await sendFiles(); }catch(e){status(e.message || 'Sending failed.', 'bad');}
+    };
+  }catch(e){status(e.message || 'Could not connect. Check the pasted answer.', 'bad');}
+};
+
+async function waitForBuffer(){
+  if(!channel || channel.readyState !== 'open') throw new Error('Connection closed.');
+  if(channel.bufferedAmount < 512*1024) return;
+  await new Promise(resolve => {
+    channel.bufferedAmountLowThreshold = 256*1024;
+    channel.addEventListener('bufferedamountlow', resolve, {once:true});
+  });
+}
+async function sendFiles(){
+  const total = selectedFiles.reduce((s,f)=>s+f.size,0); let sent=0;
+  for(const file of selectedFiles){
+    channel.send(JSON.stringify({kind:'start',name:file.name,size:file.size,type:file.type||'application/octet-stream'}));
+    const chunkSize = 16*1024;
+    for(let offset=0;offset<file.size;offset+=chunkSize){
+      await waitForBuffer();
+      const chunk = await file.slice(offset,Math.min(offset+chunkSize,file.size)).arrayBuffer();
+      channel.send(chunk); sent += chunk.byteLength;
+      progress(total ? sent/total*100 : 100);
+    }
+    channel.send(JSON.stringify({kind:'end'}));
+  }
+  channel.send(JSON.stringify({kind:'done'}));
+  status('All selected files sent. Keep the connection open until the receiver confirms.', 'good');
+}
+function receiveMessage(ev){
+  if(typeof ev.data === 'string'){
+    let msg; try{msg=JSON.parse(ev.data)}catch(e){return;}
+    if(msg.kind==='start'){
+      receiving={name:msg.name,size:msg.size,type:msg.type,chunks:[],received:0};
+      status('Receiving '+msg.name+'…');
+      progress(0);
+    }else if(msg.kind==='end' && receiving){
+      const blob = new Blob(receiving.chunks,{type:receiving.type});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=receiving.name; a.textContent='Download '+receiving.name+' ('+formatSize(blob.size)+')';
+      $('downloads').prepend(a);
+      status('Received '+receiving.name+'. Tap its download link.', 'good');
+      receiving=null; progress(100);
+    }else if(msg.kind==='done'){
+      status('Transfer complete. Download the received files below.', 'good');
+    }
+  }else if(receiving){
+    receiving.chunks.push(ev.data instanceof Blob ? ev.data : new Blob([ev.data]));
+    receiving.received += ev.data.byteLength || ev.data.size || 0;
+    progress(receiving.size ? receiving.received/receiving.size*100 : 100);
+  }
+}
+})();
+</script>
+</body>
+</html>
